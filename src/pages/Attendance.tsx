@@ -247,6 +247,14 @@ export default function Attendance() {
           </Card>
         </>
       )}
+
+      <CameraCapture
+        open={cameraOpen}
+        onOpenChange={setCameraOpen}
+        onCapture={(dataUrl) => runMatch(dataUrl)}
+        title="Capture student face"
+        description="Center the student's face in the oval and click Capture to run AI matching"
+      />
     </div>
   );
 }
