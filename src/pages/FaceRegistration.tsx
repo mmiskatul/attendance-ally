@@ -181,6 +181,22 @@ export default function FaceRegistration() {
                 />
               </label>
 
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">OR</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setCameraOpen(true)}
+                disabled={images.length >= 5}
+              >
+                <Camera className="mr-2 h-4 w-4" /> Capture from camera
+              </Button>
+
               {images.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
                   {images.map((img) => {
