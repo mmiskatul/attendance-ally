@@ -19,7 +19,9 @@ export default function Attendance() {
   const [active, setActive] = useState<{ course: Course; startedAt: string; presentCount: number } | null>(null);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
   const [matching, setMatching] = useState(false);
-  const [lastMatch, setLastMatch] = useState<{ student: Student; confidence: number } | null>(null);
+  const [lastMatch, setLastMatch] = useState<{ student: Student; confidence: number; preview?: string } | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [lastFrame, setLastFrame] = useState<string | null>(null);
 
   useEffect(() => { api.getCourses().then(setCourses); }, []);
 
