@@ -36,10 +36,37 @@ export default function Attendance() {
   const close = () => {
     if (!active) return;
     toast.success(`Session closed · ${active.presentCount} students marked`);
-    setActive(null); setLastMatch(null);
+    setActive(null); setLastMatch(null); setLastFrame(null);
   };
 
-  const capture = async () => {
+  const runMatch = async (frameDataUrl?: string) => {
+    if (!active) return;
+    setMatching(true);
+    if (frameDataUrl) setLastFrame(frameDataUrl);
+    const m = await api.matchFace();
+    setLastMatch({ ...m, preview: frameDataUrl });
+    const log: AttendanceLog = {
+      id: `log-${Date.now()}`,
+      studentId: m.student.studentId,
+      studentName: m.student.name,
+      courseCode: active.course.code,
+      timestamp: new Date().toISOString(),
+      status: m.confidence > 0.95 ? "present" : "late",
+      confidence: m.confidence,
+    };
+    setLogs((prev) => [log, ...prev]);
+    setActive((a) => a ? { ...a, presentCount: a.presentCount + 1 } : a);
+    setMatching(false);
+  };
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => runMatch(reader.result as string);
+    reader.readAsDataURL(file);
+  };
     if (!active) return;
     setMatching(true);
     const m = await api.matchFace();
