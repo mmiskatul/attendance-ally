@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { ScanFace, Upload, Check, X, Sparkles, Loader2, ImageIcon, CircleDot } from "lucide-react";
+import { ScanFace, Upload, Check, X, Sparkles, Loader2, ImageIcon, CircleDot, Camera } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CameraCapture } from "@/components/shared/CameraCapture";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -31,8 +32,26 @@ export default function FaceRegistration() {
   const [step, setStep] = useState(0);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<"success" | "error" | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   useEffect(() => { api.getStudents().then(setStudents); }, []);
+
+  const addCapturedImage = (dataUrl: string) => {
+    if (images.length >= 5) { toast.error("Maximum 5 images"); return; }
+    const img: UploadedImage = {
+      id: `cam-${Date.now()}`,
+      name: `capture-${images.length + 1}.jpg`,
+      url: dataUrl,
+      quality: {
+        lighting: Math.random() > 0.15,
+        faceDetected: Math.random() > 0.05,
+        aligned: Math.random() > 0.2,
+        sharp: Math.random() > 0.15,
+      },
+    };
+    setImages((prev) => [...prev, img]);
+    toast.success("Image captured");
+  };
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
@@ -162,6 +181,22 @@ export default function FaceRegistration() {
                 />
               </label>
 
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-border" />
+                <span className="text-xs text-muted-foreground">OR</span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setCameraOpen(true)}
+                disabled={images.length >= 5}
+              >
+                <Camera className="mr-2 h-4 w-4" /> Capture from camera
+              </Button>
+
               {images.length > 0 && (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
                   {images.map((img) => {
@@ -269,6 +304,14 @@ export default function FaceRegistration() {
           )}
         </div>
       </div>
+
+      <CameraCapture
+        open={cameraOpen}
+        onOpenChange={setCameraOpen}
+        onCapture={(dataUrl) => addCapturedImage(dataUrl)}
+        title="Capture face image"
+        description="Center the student's face in the oval and click Capture"
+      />
     </div>
   );
 }

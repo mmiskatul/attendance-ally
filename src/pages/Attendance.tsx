@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ClipboardCheck, Play, Square, Camera, Upload, User, Sparkles, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { CameraCapture } from "@/components/shared/CameraCapture";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -18,7 +19,9 @@ export default function Attendance() {
   const [active, setActive] = useState<{ course: Course; startedAt: string; presentCount: number } | null>(null);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
   const [matching, setMatching] = useState(false);
-  const [lastMatch, setLastMatch] = useState<{ student: Student; confidence: number } | null>(null);
+  const [lastMatch, setLastMatch] = useState<{ student: Student; confidence: number; preview?: string } | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [lastFrame, setLastFrame] = useState<string | null>(null);
 
   useEffect(() => { api.getCourses().then(setCourses); }, []);
 
@@ -33,14 +36,15 @@ export default function Attendance() {
   const close = () => {
     if (!active) return;
     toast.success(`Session closed · ${active.presentCount} students marked`);
-    setActive(null); setLastMatch(null);
+    setActive(null); setLastMatch(null); setLastFrame(null);
   };
 
-  const capture = async () => {
+  const runMatch = async (frameDataUrl?: string) => {
     if (!active) return;
     setMatching(true);
+    if (frameDataUrl) setLastFrame(frameDataUrl);
     const m = await api.matchFace();
-    setLastMatch(m);
+    setLastMatch({ ...m, preview: frameDataUrl });
     const log: AttendanceLog = {
       id: `log-${Date.now()}`,
       studentId: m.student.studentId,
@@ -54,6 +58,17 @@ export default function Attendance() {
     setActive((a) => a ? { ...a, presentCount: a.presentCount + 1 } : a);
     setMatching(false);
   };
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => runMatch(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+
 
   const pct = active ? (active.presentCount / active.course.studentsEnrolled) * 100 : 0;
 
@@ -128,19 +143,28 @@ export default function Attendance() {
                 <CardDescription>Use the camera or upload an image to identify a student</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex aspect-video w-full flex-col items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/30">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-soft text-primary">
-                    <Camera className="h-7 w-7" />
-                  </div>
-                  <p className="mt-3 text-sm font-medium">Camera feed</p>
-                  <p className="text-xs text-muted-foreground">Point camera at student's face to begin matching</p>
+                <div className="relative flex aspect-video w-full flex-col items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-border bg-muted/30">
+                  {lastFrame ? (
+                    <img src={lastFrame} alt="Last captured frame" className="absolute inset-0 h-full w-full object-cover" />
+                  ) : (
+                    <>
+                      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary-soft text-primary">
+                        <Camera className="h-7 w-7" />
+                      </div>
+                      <p className="mt-3 text-sm font-medium">Camera feed</p>
+                      <p className="text-xs text-muted-foreground">Click "Open camera" to start matching</p>
+                    </>
+                  )}
                 </div>
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <Button onClick={capture} disabled={matching} className="bg-gradient-primary">
-                    {matching ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Matching…</> : <><Sparkles className="mr-2 h-4 w-4" /> Capture & match</>}
+                  <Button onClick={() => setCameraOpen(true)} disabled={matching} className="bg-gradient-primary">
+                    {matching ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Matching…</> : <><Camera className="mr-2 h-4 w-4" /> Open camera & capture</>}
                   </Button>
-                  <Button variant="outline" onClick={capture} disabled={matching}>
-                    <Upload className="mr-2 h-4 w-4" /> Upload image instead
+                  <Button variant="outline" disabled={matching} asChild>
+                    <label className="cursor-pointer">
+                      <Upload className="mr-2 h-4 w-4" /> Upload image instead
+                      <input type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+                    </label>
                   </Button>
                 </div>
               </CardContent>
@@ -223,6 +247,14 @@ export default function Attendance() {
           </Card>
         </>
       )}
+
+      <CameraCapture
+        open={cameraOpen}
+        onOpenChange={setCameraOpen}
+        onCapture={(dataUrl) => runMatch(dataUrl)}
+        title="Capture student face"
+        description="Center the student's face in the oval and click Capture to run AI matching"
+      />
     </div>
   );
 }
