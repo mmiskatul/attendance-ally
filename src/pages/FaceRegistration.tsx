@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { ScanFace, Upload, Check, X, Sparkles, Loader2, ImageIcon, CircleDot } from "lucide-react";
+import { ScanFace, Upload, Check, X, Sparkles, Loader2, ImageIcon, CircleDot, Camera } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
+import { CameraCapture } from "@/components/shared/CameraCapture";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
