@@ -32,8 +32,26 @@ export default function FaceRegistration() {
   const [step, setStep] = useState(0);
   const [processing, setProcessing] = useState(false);
   const [result, setResult] = useState<"success" | "error" | null>(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
 
   useEffect(() => { api.getStudents().then(setStudents); }, []);
+
+  const addCapturedImage = (dataUrl: string) => {
+    if (images.length >= 5) { toast.error("Maximum 5 images"); return; }
+    const img: UploadedImage = {
+      id: `cam-${Date.now()}`,
+      name: `capture-${images.length + 1}.jpg`,
+      url: dataUrl,
+      quality: {
+        lighting: Math.random() > 0.15,
+        faceDetected: Math.random() > 0.05,
+        aligned: Math.random() > 0.2,
+        sharp: Math.random() > 0.15,
+      },
+    };
+    setImages((prev) => [...prev, img]);
+    toast.success("Image captured");
+  };
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
