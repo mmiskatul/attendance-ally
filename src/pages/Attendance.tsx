@@ -67,23 +67,8 @@ export default function Attendance() {
     reader.onload = () => runMatch(reader.result as string);
     reader.readAsDataURL(file);
   };
-    if (!active) return;
-    setMatching(true);
-    const m = await api.matchFace();
-    setLastMatch(m);
-    const log: AttendanceLog = {
-      id: `log-${Date.now()}`,
-      studentId: m.student.studentId,
-      studentName: m.student.name,
-      courseCode: active.course.code,
-      timestamp: new Date().toISOString(),
-      status: m.confidence > 0.95 ? "present" : "late",
-      confidence: m.confidence,
-    };
-    setLogs((prev) => [log, ...prev]);
-    setActive((a) => a ? { ...a, presentCount: a.presentCount + 1 } : a);
-    setMatching(false);
-  };
+
+
 
   const pct = active ? (active.presentCount / active.course.studentsEnrolled) * 100 : 0;
 
