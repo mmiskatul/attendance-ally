@@ -304,6 +304,14 @@ export default function FaceRegistration() {
           )}
         </div>
       </div>
+
+      <CameraCapture
+        open={cameraOpen}
+        onOpenChange={setCameraOpen}
+        onCapture={(dataUrl) => addCapturedImage(dataUrl)}
+        title="Capture face image"
+        description="Center the student's face in the oval and click Capture"
+      />
     </div>
   );
 }
